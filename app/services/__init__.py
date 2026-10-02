@@ -11,7 +11,7 @@ from .s3 import (
 
 from .datacenters import create_datacenters_clients
 
-from .wgdashboard import (
+from wgdashboard import (
     WGDashboardClient,
     WGDashboardAPIError,
     WGDashboardAuthError,
