@@ -371,7 +371,7 @@ async def edit_user(
         }
     )
 
-# НА РЕВЬЮ НАДО
+# Готов
 @router.delete("/{user_id}")
 async def delete_user(
     request: Request,
@@ -388,7 +388,9 @@ async def delete_user(
     async def delete_events():
         total = 0
 
-        sessions = (await db.execute(select(Session).where(Session.user_id == user_id))).scalars().all()
+        sessions = (await db.execute(
+            select(Session).where(Session.user_id == user_id))
+        ).scalars().all()
 
         for session in sessions:
             await db.delete(session)
@@ -425,7 +427,6 @@ async def delete_user(
                 # Сервисная таблица. Уведомлять не надо
                 for message_file in message_files:
                     await db.delete(message_file)
-
                 await db.delete(message)
                 yield CursedJSON(code=codes.DELETED,
                     data={"deleted": "message", "id": message.id}
@@ -436,6 +437,7 @@ async def delete_user(
                 code=codes.DELETED,
                 data={"deleted": "messages", "total": len(messages)}
             )
+            total += len(messages)
 
             await db.delete(ticket)
             yield CursedJSON(
@@ -443,6 +445,7 @@ async def delete_user(
                 data={"deleted": "ticket", "id": ticket.id}
             )
             deleted_tickets += 1
+        total += len(tickets)
         yield CursedJSON(code=codes.DELETED,
             data={"deleted": "tickets", "total": len(tickets)}
         )
@@ -454,7 +457,7 @@ async def delete_user(
         for file in files:
             if settings.s3_enabled == YesNo.YES:
                 try:
-                    delete_file(file.external_id)
+                    await delete_file(file.external_id)
                     yield CursedJSON(
                         code=codes.DELETED,
                         data={"deleted": "s3file", "id": file.external_id},
@@ -542,25 +545,25 @@ async def delete_user(
                     error=f"Datacenter {datacenter_id} not found.",
                 )
 
-            remnawave_client = datacenter_clients.get("remnawave_client")
-            if remnawave_client is None:
+            elif datacenter_clients.get("remnawave_client") is None:
                 yield CursedJSON(
                     code=codes.INTERNAL_SERVER_ERROR,   # добавьте в codes
                     data={},
                     error=f"Remnawave client for datacenter {datacenter_id} is not configured.",
                 )
 
-            if subscription.method_one == MethodOne.none:
+            elif subscription.method_one == MethodOne.none:
                 yield CursedJSON(
                     code=codes.DELETED,
                     data={"deleted": "remnawave", "id": None}
                 )
             
             else:
+                remnawave_client = datacenter_clients.get("remnawave_client")
                 try:
                     await remnawave_client.users.delete_user(subscription.remnawave_id)          # -> None (204)
                     yield CursedJSON(
-                        code=codes.DELETD,
+                        code=codes.DELETED,
                         data={"deleted": "remnawave", "id": subscription.remnawave_id}
                     )
 
@@ -618,7 +621,7 @@ async def delete_user(
                     error=f"WGDasboard client for datacenter {datacenter_id} is not configured.",
                 )
 
-            if subscription.method_two == MethodTwo.none:
+            elif subscription.method_two == MethodTwo.none:
                 yield CursedJSON(
                     code=codes.DELETED,
                     data={"deleted": "wgdashboard", "id": None}
@@ -729,14 +732,14 @@ async def delete_user(
 
         user_packets = (await db.execute(
             select(Packet).where(Packet.user_id == user_id))
-        ).scalar().all()
+        ).scalars().all()
         for user_packet in user_packets:
             await db.delete(user_packet)
             yield CursedJSON(
                 code=codes.DELETED,
                 data={"deleted": "packet", "id": user_packet.id}
             )
-        total += len(user_codes)
+        total += len(user_packets)
         yield CursedJSON(
             code=codes.DELETED,
             data={"deleted": "packets", "total": len(user_codes)}

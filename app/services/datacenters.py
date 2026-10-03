@@ -4,7 +4,7 @@ from typing import Any
 from app.models import Datacenter
 from remnawave import RemnawaveSDK
 
-from .wgdashboard.client import WGDashboardClient
+from app.services import WGDashboardClient
 
 
 def create_datacenters_clients(
