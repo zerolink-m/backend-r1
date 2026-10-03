@@ -105,19 +105,22 @@ def create_cdn_token(path: str, expires: int, ip: str = "") -> str:
     logging.debug(f"create_cdn_token generated token for path={path}")
     return f"md5({token})"
 
-def require_authorization(required_roles: list | None = None, refresh_token_needed: bool = False):
-    logging.debug(f"require_authorization factory called with required_roles={required_roles}, refresh_token_needed={refresh_token_needed}")
+def require_authorization(required_roles: list | None = None, refresh_token_needed: bool = False, public_endpoint: bool | None = False):
+    logging.debug(f"require_authorization factory called with required_roles={required_roles}, refresh_token_needed={refresh_token_needed}, public_endpoint={public_endpoint}")
     if required_roles is None:
         required_roles = []
 
     from app.database import get_db
 
-    async def dependency(request: Request, db: AsyncSession = Depends(get_db)) -> dict:
-        logging.debug(f"require_authorization dependency called, required_roles={required_roles}, refresh_token_needed={refresh_token_needed}")
+    async def dependency(request: Request, db: AsyncSession = Depends(get_db)) -> dict | None:
+        logging.debug(f"require_authorization dependency called, required_roles={required_roles}, refresh_token_needed={refresh_token_needed}, public_endpoint={public_endpoint}")
         authorization = request.headers.get("Authorization", "")
 
         # Базовая проверка
         if not authorization:
+            if public_endpoint:
+                logging.debug("Authorization header is empty on public endpoint")
+                return None
             logging.debug("Authorization header is empty")
             raise CursedException(code=codes.TOKEN_ERROR, error="Authorization header is empty.")
 
@@ -152,6 +155,10 @@ def require_authorization(required_roles: list | None = None, refresh_token_need
         )
         user = result.scalar_one_or_none()
 
+        if not user:
+            logging.debug(f"User with id={token['id']} not found")
+            raise CursedException(code=codes.INTERNAL_SERVER_ERROR, error="User not found")
+
         # Если юзер заблокирован.
         if user.blocked == 1:
             raise CursedException(code=codes.YOU_ARE_BLOCKED, error=f"You are blocked. Reason: {user.blocked_reason}")
@@ -163,12 +170,8 @@ def require_authorization(required_roles: list | None = None, refresh_token_need
         )
         session = result.scalar_one_or_none()
 
-        # Защита от несуществующей сессии и юзера
-        if not user:
-            logging.debug(f"User with id={token['id']} not found")
-            raise CursedException(code=codes.INTERNAL_SERVER_ERROR, error="User not found")
-
-        elif not session:
+        # Защита от несуществующей сессии
+        if not session:
             logging.debug(f"Session with id={token['sid']} not found")
             raise CursedException(code=codes.INTERNAL_SERVER_ERROR, error="Session not found")
 

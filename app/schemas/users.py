@@ -1,24 +1,12 @@
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, create_model
+from pydantic import Field
 from app.utils import Regions
 from app.models import UserRole
-from typing import TypeVar, Generic, Optional
+from typing import Optional
 from enum import Enum
 
-
-T = TypeVar('T')
-
-
-class DataWrapper(BaseModel, Generic[T]):
-    data: T
-
-
-class DataBaseModel(BaseModel):
-    @classmethod
-    def wrap(cls) -> type[BaseModel]:
-        """Возвращает класс-обертку для использования в эндпоинтах"""
-        return create_model(f"{cls.__name__}Wrapper", data=(cls, ...))
+from app.schemas import DataBaseModel
 
 class Reason(str, Enum):
     ticket = "ticket"

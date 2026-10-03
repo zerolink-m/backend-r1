@@ -80,7 +80,7 @@ router = APIRouter(
 SEARCHABLE_COLUMNS = ["id","name", "surname", "balance", "region", "possible_region", "email", "avatar", "role", "blocked", "blocked_reason", "updated_at", "added_at"]
 ALLOWED_FIELDS = ["avatar", "name", "surname", "password", "region"]
 # Поля, которые никогда не должны попадать в ответы API
-PRIVATE_USER_FIELDS = ["password"]
+PRIVATE_FIELDS = ["password"]
 
 # Готов
 @router.get("/{user_id}")
@@ -146,7 +146,7 @@ async def get_one_user(
     if user_id == auth["user"].id:
         return CursedResponser(
             code=codes.SUCCESS,
-            data={"user": model_to_dict(model=auth["user"], exclude=PRIVATE_USER_FIELDS)}
+            data={"user": model_to_dict(model=auth["user"], exclude=PRIVATE_FIELDS)}
         )
 
     result = await db.execute(
@@ -160,7 +160,7 @@ async def get_one_user(
             error = f"Resource {user_id} not found"
         )
 
-    result_dict = model_to_dict(model=result, exclude=PRIVATE_USER_FIELDS)
+    result_dict = model_to_dict(model=result, exclude=PRIVATE_FIELDS)
 
     if reason == Reason.ticket and reason_value is not None:
         for delete_from_response in ["email", "password", "region", "possible_region"]:
@@ -190,7 +190,7 @@ async def get_users(
     results = await db.execute(query)
     results = results.scalars().all()
 
-    items = models_to_dict(models=results, exclude=PRIVATE_USER_FIELDS)
+    items = models_to_dict(models=results, exclude=PRIVATE_FIELDS)
 
     return CursedResponser(
         code = codes.SUCCESS,
@@ -261,7 +261,7 @@ async def create_user(
 
     return CursedResponser(
         code=codes.CREATED,
-        data={"user": model_to_dict(model=new_user, exclude=PRIVATE_USER_FIELDS)}
+        data={"user": model_to_dict(model=new_user, exclude=PRIVATE_FIELDS)}
     )
 
 # Готов
@@ -289,10 +289,15 @@ async def edit_user(
             allowed_fields=ALLOWED_FIELDS
         )
 
-    user = (await db.execute(select(User).where(User.id == user_id))).scalar_one_or_none()
+    user = (await db.execute(
+        select(User).where(User.id == user_id)
+    )).scalar_one_or_none()
 
     if not user:
-        raise CursedException(code=codes.NOT_FOUND, error=f"Resource {user_id} not found")
+        raise CursedException(
+            code=codes.NOT_FOUND,
+            error=f"Resource {user_id} not found"
+        )
 
     data.pop("id", None)
     data.pop("updated_at", None)
@@ -367,7 +372,7 @@ async def edit_user(
     return CursedResponser(
         code=codes.EDITED,
         data={
-            "user": model_to_dict(model=user, exclude=PRIVATE_USER_FIELDS)
+            "user": model_to_dict(model=user, exclude=PRIVATE_FIELDS)
         }
     )
 
