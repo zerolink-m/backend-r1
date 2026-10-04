@@ -9,7 +9,10 @@ from .s3 import (
     presigned_url
 )
 
-from .datacenters import create_datacenters_clients
+from .datacenters import (
+    create_datacenters_clients,
+    update_datacenter_client
+)
 
 from wgdashboard import (
     WGDashboardClient,
@@ -35,6 +38,7 @@ __all__ = [
     "WGDashboardClient",
     "delete_subscription",
     "create_datacenters_clients",
+    "update_datacenter_client",
     "SubscriptionNotFound",
     "WGDashboardAPIError",
     "WGDashboardAuthError",

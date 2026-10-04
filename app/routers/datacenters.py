@@ -11,14 +11,21 @@ from app.utils import (
 from app import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+
+from sqlalchemy.exc import IntegrityError
 from app.schemas import QueryParams
-from fastapi import APIRouter, Depends
+from fastapi import (
+    APIRouter,
+    Depends,
+    Request
+)
 from app.models import (
     User,
     UserRole,
     Datacenter
 )
 
+from app.services import update_datacenter_client
 from app.schemas import EditDatacenter
 
 
@@ -96,13 +103,14 @@ async def get_datacenter(
             error=f"Datacenter {datacenter_id} not found."
         )
 
-    if auth["user"].role == UserRole.admin:
-        return CursedResponser(
-            code=codes.SUCCESS,
-            data={
-                "datacenter": model_to_dict(model=datacenter)
-            }
-        )
+    if auth is not None:
+        if auth["user"].role == UserRole.admin:
+            return CursedResponser(
+                code=codes.SUCCESS,
+                data={
+                    "datacenter": model_to_dict(model=datacenter)
+                }
+            )
     
     else:
         return CursedResponser(
@@ -120,8 +128,8 @@ async def get_datacenters(
     auth: dict = Depends(require_authorization(required_roles=["admin"], public_endpoint=True))
 ):
     query = apply_query_params(
-        query=select(User),
-        model=User,
+        query=select(Datacenter),
+        model=Datacenter,
         params=params,
         searchable_columns=SEARCHABLE_COLUMNS
     )
@@ -130,13 +138,14 @@ async def get_datacenters(
         query
     )).scalars().all()
 
-    if auth["user"].role == UserRole.admin:
-        return CursedResponser(
-            code = codes.SUCCESS,
-            data = {
-                "datacenters": models_to_dict(models=datacenters)
-            }
-        )
+    if auth is not None:
+        if auth["user"].role == UserRole.admin:
+            return CursedResponser(
+                code = codes.SUCCESS,
+                data = {
+                    "datacenters": models_to_dict(models=datacenters)
+                }
+            )
 
     else:
         return CursedResponser(
@@ -146,13 +155,16 @@ async def get_datacenters(
             }
         )
 
-#
+# готов
 @router.patch("/{datacenter_id}")
 async def edit_datacenter(
+    request: Request,
     datacenter_id: int,
+    data: EditDatacenter,
     db: AsyncSession = Depends(get_db),
     auth: dict = Depends(require_authorization(required_roles=["admin"]))
 ):
+    data = data.model_dump(exclude_unset=True)
     datacenter = (await db.execute(
         select(Datacenter).where(Datacenter.id == datacenter_id)
     )).scalar_one_or_none()
@@ -164,5 +176,23 @@ async def edit_datacenter(
             error=f"Datacenter {datacenter_id} not found."
         )
 
+    data.pop("updated_at", None)
+    data.pop("added_at", None)
+    data["updated_at"] = now()
+
+    for field, value in data.items():
+        setattr(datacenter, field, value)
+
+    await db.flush()
+
+    request.app.state.datacenter_clients = update_datacenter_client(
+        datacenter=datacenter,
+        clients=request.app.state.datacenter_clients
+    )
     
-    return
+    return CursedResponser(
+        code=codes.EDITED,
+        data={
+            "datacenter": model_to_dict(model=datacenter)
+        }
+    )
