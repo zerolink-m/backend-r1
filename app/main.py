@@ -3,7 +3,15 @@ from fastapi.responses import JSONResponse
 
 from app.utils import http_map #, CursedResponser
 from app.utils.response import CursedException
-from app.routers import config, middleware, users, lifespan
+from app.routers import (
+    config,
+    middleware,
+    users,
+    lifespan,
+    datacenters,
+    tariffs
+)
+
 from config import settings
 import logging
 
@@ -29,3 +37,5 @@ async def cursed_exception_handler(request: Request, exc: CursedException):
 app.add_middleware(middleware.CursedMiddleware)
 app.include_router(config.router)
 app.include_router(users.router)
+app.include_router(datacenters.router)
+app.include_router(tariffs.router)
