@@ -43,6 +43,7 @@ WGDASHBOARD_ERROR = 77
 FUNCTION_NOT_IMPLEMENTED = 78
 OBJECT_HAS_CHILDS = 79
 
+OBJECT_NOT_FOUND = 96
 AVATAR_NOT_FOUND = 97
 NOT_FOUND = 98
 INTERNAL_SERVER_ERROR = 99
@@ -91,6 +92,7 @@ HTTP_MAP = {
     FUNCTION_NOT_IMPLEMENTED: 501,
     OBJECT_HAS_CHILDS: 409,
 
+    OBJECT_NOT_FOUND: 404,
     AVATAR_NOT_FOUND: 404,
     NOT_FOUND: 404,
     INTERNAL_SERVER_ERROR: 500
@@ -140,6 +142,7 @@ DETAILS_MAP = {
     FUNCTION_NOT_IMPLEMENTED: "This function is not currently implemented.",
     OBJECT_HAS_CHILDS: "The object has child objects.",
 
+    OBJECT_NOT_FOUND: "Object not found.",
     AVATAR_NOT_FOUND: "Avatar file not found.",
     NOT_FOUND: "Resource not found.",
     INTERNAL_SERVER_ERROR: "Server error.",

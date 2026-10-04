@@ -8,15 +8,15 @@ from config import settings
 import logging
 
 app = FastAPI(
-              title="ZeroLink VPN API",
-              lifespan=lifespan,
-              description="Powerful service for vpn ex: wireguard, amnezia (wireguardDashboard) or vless (remnawave)",
-              version=settings.version,
-              root_path="/cursedapi/zerolink",
-              servers=[{"url":"https://zerolink.ru.net"}],
-              terms_of_service="https://zerolink.ru.net/terms",
-              contact={"name": "Support", "email": "zlsup@zerolink.ru.net"}
-             )
+    title="ZeroLink VPN API",
+    lifespan=lifespan,
+    description="Powerful service for vpn ex: wireguard, amnezia (wireguardDashboard) or vless (remnawave)",
+    version=settings.version,
+    root_path="/cursedapi/zerolink",
+    servers=[{"url":"https://zerolink.ru.net"}],
+    terms_of_service="https://zerolink.ru.net/terms",
+    contact={"name": "Support", "email": "zlsup@zerolink.ru.net"}
+)
 
 @app.exception_handler(CursedException)
 async def cursed_exception_handler(request: Request, exc: CursedException):

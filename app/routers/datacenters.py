@@ -25,7 +25,10 @@ from app.models import (
     Datacenter
 )
 
-from app.services import update_datacenter_client, delete_datacenter_client
+from app.services import (
+    update_datacenter_client,
+    delete_datacenter_client
+)
 from app.schemas import EditDatacenter
 
 
@@ -118,7 +121,7 @@ async def get_datacenter(
             data={
                 "datacenter": model_to_dict(model=datacenter, exclude=PRIVATE_FIELDS)
             }
-        )   
+        )
 
 # готов
 @router.get("")
