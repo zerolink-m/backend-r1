@@ -41,6 +41,7 @@ DATACENTER_NOT_FOUND = 75
 REMNAWAVE_ERROR = 76
 WGDASHBOARD_ERROR = 77
 FUNCTION_NOT_IMPLEMENTED = 78
+OBJECT_HAS_CHILDS = 79
 
 AVATAR_NOT_FOUND = 97
 NOT_FOUND = 98
@@ -88,6 +89,7 @@ HTTP_MAP = {
     REMNAWAVE_ERROR: 502,
     WGDASHBOARD_ERROR: 502,
     FUNCTION_NOT_IMPLEMENTED: 501,
+    OBJECT_HAS_CHILDS: 409,
 
     AVATAR_NOT_FOUND: 404,
     NOT_FOUND: 404,
@@ -136,6 +138,7 @@ DETAILS_MAP = {
     REMNAWAVE_ERROR: "The remnawave API is unavailable for one reason or another.",
     WGDASHBOARD_ERROR: "The wgdashboard API is unavailable for one reason or another.",
     FUNCTION_NOT_IMPLEMENTED: "This function is not currently implemented.",
+    OBJECT_HAS_CHILDS: "The object has child objects.",
 
     AVATAR_NOT_FOUND: "Avatar file not found.",
     NOT_FOUND: "Resource not found.",

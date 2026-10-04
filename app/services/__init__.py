@@ -11,7 +11,8 @@ from .s3 import (
 
 from .datacenters import (
     create_datacenters_clients,
-    update_datacenter_client
+    update_datacenter_client,
+    delete_datacenter_client
 )
 
 from wgdashboard import (
@@ -39,6 +40,7 @@ __all__ = [
     "delete_subscription",
     "create_datacenters_clients",
     "update_datacenter_client",
+    "delete_datacenter_client",
     "SubscriptionNotFound",
     "WGDashboardAPIError",
     "WGDashboardAuthError",

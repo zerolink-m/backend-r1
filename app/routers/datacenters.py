@@ -20,11 +20,12 @@ from fastapi import (
     Request
 )
 from app.models import (
+    Subscription,
     UserRole,
     Datacenter
 )
 
-from app.services import update_datacenter_client
+from app.services import update_datacenter_client, delete_datacenter_client
 from app.schemas import EditDatacenter
 
 
@@ -166,6 +167,25 @@ async def create_datacenter(
 
     data["updated_at"] = now()
     data["added_at"] = now()
+    if data.get("status_url", False):
+       data["status_url"] = str(data["status_url"])
+    if data.get("remnawave_url", False):
+        data["remnawave_url"] = str(data["remnawave_url"])
+    if data["remnawave_supported"] and not data.get("remnawave_token"):
+        return CursedResponser(
+            code=codes.VALIDATION_ERROR,
+            data={},
+            error=f"If there is a remnawave_url, then there must also be a remnawave_token."
+        )
+
+    if data.get("wgdashboard_url", False):
+        data["wgdashboard_url"] = str(data["wgdashboard_url"])
+    if (data["amnezia_supported"] or data["wireguard_supported"]) and not data.get("wgdashboard_token"):
+        return CursedResponser(
+            code=codes.VALIDATION_ERROR,
+            data={},
+            error=f"If there is a wgdashboard_url, then there must also be a wgdashboard_token."
+        )
 
     new_datacenter = Datacenter(**data)
     db.add(new_datacenter)
@@ -190,6 +210,13 @@ async def edit_datacenter(
     db: AsyncSession = Depends(get_db),
     auth: dict = Depends(require_authorization(required_roles=["admin"]))
 ):
+    if data.migrate_subscriptions == True:
+        return CursedResponser(
+            code=codes.FUNCTION_NOT_IMPLEMENTED,
+            data={},
+            error="migrate_subscriptions function is not currently implemented."
+        )
+    
     data = data.model_dump(exclude_unset=True)
     datacenter = (await db.execute(
         select(Datacenter).where(Datacenter.id == datacenter_id)
@@ -204,13 +231,26 @@ async def edit_datacenter(
 
     data.pop("updated_at", None)
     data.pop("added_at", None)
+    data.pop("migrate_subscriptions", None)
     data["updated_at"] = now()
-
-    if data.migrate_subscriptions == True:
+    if data.get("status_url", False):
+       data["status_url"] = str(data["status_url"])
+    if data.get("remnawave_url", False):
+        data["remnawave_url"] = str(data["remnawave_url"])
+    if data["remnawave_supported"] and not data.get("remnawave_token"):
         return CursedResponser(
-            code=codes.FUNCTION_NOT_IMPLEMENTED,
+            code=codes.VALIDATION_ERROR,
             data={},
-            error="migrate_subscriptions function is not currently implemented."
+            error=f"If there is a remnawave_url, then there must also be a remnawave_token."
+        )
+
+    if data.get("wgdashboard_url", False):
+        data["wgdashboard_url"] = str(data["wgdashboard_url"])
+    if (data["amnezia_supported"] or data["wireguard_supported"]) and not data.get("wgdashboard_token"):
+        return CursedResponser(
+            code=codes.VALIDATION_ERROR,
+            data={},
+            error=f"If there is a wgdashboard_url, then there must also be a wgdashboard_token."
         )
 
     for field, value in data.items():
@@ -230,8 +270,49 @@ async def edit_datacenter(
         }
     )
 
+# готов
 @router.delete("/{datacenter_id}")
 async def delete_datacenter(
-
+    request: Request,
+    datacenter_id: int,
+    db: AsyncSession = Depends(get_db),
+    auth: dict = Depends(require_authorization(required_roles=["admin"]))
 ):
-    return
+    datacenter = (await db.execute(
+        select(Datacenter).where(Datacenter.id == datacenter_id)
+    )).scalar_one_or_none()
+
+    if datacenter is None:
+        return CursedResponser(
+            code=codes.DATACENTER_NOT_FOUND,
+            data={},
+            error=f"Datacenter {datacenter_id} not found."
+        )
+
+    subscriptions_on_datacenter = (await db.execute(
+        select(Subscription).where(Subscription.datacenter_id == datacenter_id)
+    )).scalars().all()
+
+    if subscriptions_on_datacenter is not None:
+        text = ""
+        for subscription in subscriptions_on_datacenter:
+            text = text + str(subscription.id)
+        return CursedResponser(
+            code=codes.OBJECT_HAS_CHILDS,
+            data={},
+            error=f"This subscriptions on datacenter: {text}"
+        )
+
+    await db.delete(datacenter)
+
+    request.app.state.datacenter_clients = delete_datacenter_client(
+        datacenter=datacenter,
+        clients=request.app.state.datacenter_clients
+    )
+
+    return CursedResponser(
+        code=codes.DELETED,
+        data={
+            "datacenter": model_to_dict(model=datacenter)
+        }
+    )

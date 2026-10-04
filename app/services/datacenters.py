@@ -69,3 +69,10 @@ def update_datacenter_client(
 
     clients[str(datacenter.id)] = client
     return clients
+
+def delete_datacenter_client(
+    datacenter: Datacenter,
+    clients: dict[str, dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    clients.pop(str(datacenter.id), None)
+    return clients
