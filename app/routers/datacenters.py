@@ -13,14 +13,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from sqlalchemy.exc import IntegrityError
-from app.schemas import QueryParams
+from app.schemas import QueryParams, CreateDatacenter
 from fastapi import (
     APIRouter,
     Depends,
     Request
 )
 from app.models import (
-    User,
     UserRole,
     Datacenter
 )
@@ -156,6 +155,33 @@ async def get_datacenters(
         )
 
 # готов
+@router.post("")
+async def create_datacenter(
+    request: Request,
+    data: CreateDatacenter,
+    db: AsyncSession = Depends(get_db),
+    auth: dict = Depends(require_authorization(required_roles=["admin"]))
+):
+    data = data.model_dump(exclude_unset=True)
+
+    data["updated_at"] = now()
+    data["added_at"] = now()
+
+    new_datacenter = Datacenter(**data)
+    db.add(new_datacenter)
+    await db.flush()
+
+    request.app.state.datacenter_clients = update_datacenter_client(
+        datacenter=new_datacenter,
+        clients=request.app.state.datacenter_clients
+    )
+
+    return CursedResponser(
+        code=codes.CREATED,
+        data={"datacenter": model_to_dict(model=new_datacenter)}
+    )
+
+# готов
 @router.patch("/{datacenter_id}")
 async def edit_datacenter(
     request: Request,
@@ -180,6 +206,13 @@ async def edit_datacenter(
     data.pop("added_at", None)
     data["updated_at"] = now()
 
+    if data.migrate_subscriptions == True:
+        return CursedResponser(
+            code=codes.FUNCTION_NOT_IMPLEMENTED,
+            data={},
+            error="migrate_subscriptions function is not currently implemented."
+        )
+
     for field, value in data.items():
         setattr(datacenter, field, value)
 
@@ -196,3 +229,9 @@ async def edit_datacenter(
             "datacenter": model_to_dict(model=datacenter)
         }
     )
+
+@router.delete("/{datacenter_id}")
+async def delete_datacenter(
+
+):
+    return

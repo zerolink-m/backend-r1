@@ -12,6 +12,7 @@ from .users import (
     Reason
 )
 from .datacenters import(
+    CreateDatacenter,
     EditDatacenter
 )
 
@@ -28,6 +29,7 @@ __all__ = [
     "EditUser",
     "Regions",
     "Reason",
+    "CreateDatacenter",
     "EditDatacenter"
 ]
 

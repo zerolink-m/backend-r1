@@ -40,6 +40,7 @@ S3_ERROR = 74
 DATACENTER_NOT_FOUND = 75
 REMNAWAVE_ERROR = 76
 WGDASHBOARD_ERROR = 77
+FUNCTION_NOT_IMPLEMENTED = 78
 
 AVATAR_NOT_FOUND = 97
 NOT_FOUND = 98
@@ -86,6 +87,7 @@ HTTP_MAP = {
     DATACENTER_NOT_FOUND: 404,
     REMNAWAVE_ERROR: 502,
     WGDASHBOARD_ERROR: 502,
+    FUNCTION_NOT_IMPLEMENTED: 501,
 
     AVATAR_NOT_FOUND: 404,
     NOT_FOUND: 404,
@@ -133,6 +135,7 @@ DETAILS_MAP = {
     DATACENTER_NOT_FOUND: "Datacenter not found.",
     REMNAWAVE_ERROR: "The remnawave API is unavailable for one reason or another.",
     WGDASHBOARD_ERROR: "The wgdashboard API is unavailable for one reason or another.",
+    FUNCTION_NOT_IMPLEMENTED: "This function is not currently implemented.",
 
     AVATAR_NOT_FOUND: "Avatar file not found.",
     NOT_FOUND: "Resource not found.",
