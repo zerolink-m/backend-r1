@@ -41,9 +41,9 @@ class Packet(Base):
         server_default="traffic"
     )
 
-    traffic: Mapped[int] = mapped_column(
+    traffic: Mapped[int | None] = mapped_column(
         BigInteger,
-        nullable=False,
+        nullable=True,
         server_default="0"
     )
 

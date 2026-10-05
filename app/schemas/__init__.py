@@ -15,6 +15,10 @@ from .datacenters import(
     CreateDatacenter,
     EditDatacenter
 )
+from .tariffs import (
+    EditTariff,
+    CreateTariff
+)
 
 from typing import TypeVar, Generic
 from pydantic import BaseModel, create_model
@@ -30,7 +34,9 @@ __all__ = [
     "Regions",
     "Reason",
     "CreateDatacenter",
-    "EditDatacenter"
+    "EditDatacenter",
+    "EditTariff",
+    "CreateTariff"
 ]
 
 T = TypeVar('T')

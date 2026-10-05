@@ -21,6 +21,7 @@ from enum import Enum
 
 from sqlalchemy import Enum as SAEnum, Numeric, String, Integer, BigInteger
 from sqlalchemy.orm import Mapped, mapped_column
+from app.models import TariffType
 
 from .base import Base
 
@@ -57,8 +58,20 @@ class PayHistory(Base):
         nullable=True
     )
 
-    tariff_id: Mapped[int | None] = mapped_column(
-        Integer,
+    type: Mapped[TariffType] = mapped_column(
+        SAEnum(TariffType),
+        nullable=False,
+        server_default="traffic"
+    )
+
+    traffic: Mapped[int | None] = mapped_column(
+        BigInteger,
+        nullable=True,
+        server_default="0"
+    )
+
+    unlimited_time: Mapped[int | None] = mapped_column(
+        BigInteger,
         nullable=True
     )
 

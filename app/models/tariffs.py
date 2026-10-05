@@ -72,7 +72,7 @@ class Tariff(Base):
         nullable=True
     )
 
-    unlimited_until: Mapped[int | None] = mapped_column(
+    unlimited_time: Mapped[int | None] = mapped_column(
         BigInteger,
         nullable=True,
         server_default="0"
