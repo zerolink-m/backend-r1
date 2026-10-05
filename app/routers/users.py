@@ -549,13 +549,15 @@ async def delete_user(
                     data={},
                     error=f"Datacenter {datacenter_id} not found.",
                 )
+                continue
 
-            elif datacenter_clients.get("remnawave_client") is None:
+            elif datacenter_clients.get("remnawave_client") is None and subscription.method_two == MethodTwo.remnawave:
                 yield CursedJSON(
                     code=codes.INTERNAL_SERVER_ERROR,   # добавьте в codes
                     data={},
                     error=f"Remnawave client for datacenter {datacenter_id} is not configured.",
                 )
+                continue
 
             elif subscription.method_one == MethodOne.none:
                 yield CursedJSON(

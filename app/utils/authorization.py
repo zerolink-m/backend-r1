@@ -207,7 +207,7 @@ def check_resource_access(
     logging.debug(
         f"check_resource_access: user_id={requesting_user.id}, "
         f"user_role={requesting_user.role}, resource_owner_id={resource_owner_id}, "
-        f"operation={operation}, allow_support={allow_support}"
+        f"operation={operation}"
     )
 
     # Админ может все
