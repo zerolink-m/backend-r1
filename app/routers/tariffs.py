@@ -105,6 +105,7 @@ async def get_tariffs(
         }
     )
 
+# готов
 @router.post("")
 async def create_tariff(
     data: CreateTariff,
@@ -128,6 +129,7 @@ async def create_tariff(
         data={"tariff": model_to_dict(model=new_tariff)}
     )
 
+# готов
 @router.patch("/{tariff_id}")
 async def edit_tariff(
     data: EditTariff,
@@ -168,6 +170,7 @@ async def edit_tariff(
         }
     )
 
+# готов
 @router.delete("/{tariff_id}")
 async def delete_tariff(
     tariff_id: int,
