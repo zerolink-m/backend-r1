@@ -86,6 +86,10 @@ class Settings(BaseSettings):
     s3_cdn_url: str = "https://s3.private.com"
     s3_cdn_key: str = "abc123"
 
+    # File, kb
+    file_max_size: int = 10000
+    file_min_size: int = 0
+
     # Настройки сервера
     level: Level = Level.TEST
     version: str = "v1.0.0R0-Alpha"

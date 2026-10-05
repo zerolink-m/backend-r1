@@ -22,6 +22,7 @@ from .tariffs import (
 
 from typing import TypeVar, Generic
 from pydantic import BaseModel, create_model
+from .files import FilenamePattern
 
 __all__ = [
     # Pagination
@@ -36,7 +37,8 @@ __all__ = [
     "CreateDatacenter",
     "EditDatacenter",
     "EditTariff",
-    "CreateTariff"
+    "CreateTariff",
+    "FilenamePattern"
 ]
 
 T = TypeVar('T')

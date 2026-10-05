@@ -47,6 +47,7 @@ from .query_builder import apply_query_params
 from .response import CursedResponser, CursedException, CursedStreamingResponser, CursedJSON
 from .search import SearchMethod
 from .password import hash_password, verify_password
+from .fileformat import detect_format
 from .helpers import now, model_to_dict, models_to_dict
 from .authorization import (
     require_authorization,
@@ -119,6 +120,7 @@ __all__ = [
     "chech_fields",
     "hash_password",
     "verify_password",
+    "detect_format",
     # Regions
     "REGIONS",
     "Regions",

@@ -1,8 +1,9 @@
 # app/schemas/files.py
 from app.schemas import DataBaseModel
 from typing import Optional
-from pydantic import Field, AnyHttpUrl
+from pydantic import Field, AnyHttpUrl, StringConstraints
 from app.models import FileStorageType
+from typing import Annotated, Optional
 '''
 CREATE TABLE files (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
@@ -22,3 +23,10 @@ class EditFile(DataBaseModel):
     user_id: Optional[int] = Field(ge=1, le=2147483647)
     type: Optional[FileStorageType] = Field()
 '''
+
+FilenamePattern = Annotated[
+    Optional[str],
+    # Любые символы (в т.ч. . ( ) ? * : % ; ! " @ # $ ^ + = | } ] { [ ' и т.д.),
+    # кроме управляющих символов и слешей (защита от path traversal)
+    StringConstraints(pattern=r"^[^\x00-\x1f/\\]+$", max_length=255)
+]

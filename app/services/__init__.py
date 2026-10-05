@@ -6,7 +6,12 @@ from .s3 import (
     download_file,
     file_exists,
     file_info,
-    presigned_url
+    presigned_url,
+    multipart_create,
+    multipart_upload_part,
+    multipart_complete,
+    multipart_abort,
+    multipart_stream
 )
 
 from .datacenters import (
@@ -36,6 +41,11 @@ __all__ = [
     "file_exists",
     "file_info",
     "presigned_url",
+    "multipart_create",
+    "multipart_upload_part",
+    "multipart_complete",
+    "multipart_abort",
+    "multipart_stream",
     "WGDashboardClient",
     "delete_subscription",
     "create_datacenters_clients",

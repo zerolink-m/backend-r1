@@ -149,10 +149,9 @@ async def get_one_user(
             data={"user": model_to_dict(model=auth["user"], exclude=PRIVATE_FIELDS)}
         )
 
-    result = await db.execute(
+    result = (await db.execute(
         select(User).where(User.id == user_id)
-    )
-    result = result.scalar_one_or_none()
+    )).scalar_one_or_none()
 
     if not result:
         raise CursedException(

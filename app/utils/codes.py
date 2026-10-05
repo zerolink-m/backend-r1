@@ -10,6 +10,7 @@ TEMPORARY_REDIRECTED = 7
 AUTHORIZED = 8
 REDIRECTED = 9
 STREAMING_RESPONSE = 10
+PARTIALLY_SUCCESS = 11
 
 # Ошибка
 VALIDATION_ERROR = 50
@@ -42,6 +43,7 @@ REMNAWAVE_ERROR = 76
 WGDASHBOARD_ERROR = 77
 FUNCTION_NOT_IMPLEMENTED = 78
 OBJECT_HAS_CHILDS = 79
+TOO_SMALL = 80
 
 OBJECT_NOT_FOUND = 96
 AVATAR_NOT_FOUND = 97
@@ -60,6 +62,7 @@ HTTP_MAP = {
     AUTHORIZED: 200,
     REDIRECTED: 301,
     STREAMING_RESPONSE: 200,
+    PARTIALLY_SUCCESS: 200,
 
     VALIDATION_ERROR: 422,
     TOKEN_ERROR: 401,
@@ -91,6 +94,7 @@ HTTP_MAP = {
     WGDASHBOARD_ERROR: 502,
     FUNCTION_NOT_IMPLEMENTED: 501,
     OBJECT_HAS_CHILDS: 409,
+    TOO_SMALL: 400,
 
     OBJECT_NOT_FOUND: 404,
     AVATAR_NOT_FOUND: 404,
@@ -110,6 +114,7 @@ DETAILS_MAP = {
     AUTHORIZED: "Authorized succesfully",
     REDIRECTED: "Redirected",
     STREAMING_RESPONSE: "Streaming response.",
+    PARTIALLY_SUCCESS: "Partially success.",
 
     VALIDATION_ERROR: "Validation error.",
     TOKEN_ERROR: "Token error.",
@@ -141,6 +146,7 @@ DETAILS_MAP = {
     WGDASHBOARD_ERROR: "The wgdashboard API is unavailable for one reason or another.",
     FUNCTION_NOT_IMPLEMENTED: "This function is not currently implemented.",
     OBJECT_HAS_CHILDS: "The object has child objects.",
+    TOO_SMALL: "The request field is missing elements, or the total request size is below the minimum allowed limit.",
 
     OBJECT_NOT_FOUND: "Object not found.",
     AVATAR_NOT_FOUND: "Avatar file not found.",
