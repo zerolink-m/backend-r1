@@ -5,7 +5,7 @@ from app.utils import (
     ResourceOperation,
     CursedResponser,
     CursedException,
-    CursedStreamingResponser,
+    CursedNDJsonStreamingResponser,
     codes,
     model_to_dict,
     models_to_dict,
@@ -14,7 +14,8 @@ from app.utils import (
     hash_password,
     verify_password,
     apply_query_params,
-    CursedJSON
+    CursedJSON,
+    create_cdn_token
 )
 from app import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -144,9 +145,24 @@ async def get_one_user(
         )
 
     if user_id == auth["user"].id:
+        return_user = model_to_dict(model=auth["user"], exclude=PRIVATE_FIELDS)
+        if return_user.get("avatar", None):
+            avatar = (await db.execute(
+                select(File).where(File.id == return_user["avatar"])
+            )).scalar_one_or_none()
+
+            if avatar is not None:
+                return_user["avatar"] = model_to_dict(model=avatar)
+                if settings.s3_cdn_enabled == YesNo.YES:
+                    result_dict["avatar"]["download_url"] = f"{settings.s3_cdn_url}/{create_cdn_token(
+                        path=f"/{avatar.external_id}",
+                        expires=now() + settings.s3_cdn_token_live,
+                        ip=""
+                    )}/{avatar.external_id}"
+
         return CursedResponser(
             code=codes.SUCCESS,
-            data={"user": model_to_dict(model=auth["user"], exclude=PRIVATE_FIELDS)}
+            data={"user": return_user}
         )
 
     result = (await db.execute(
@@ -164,6 +180,20 @@ async def get_one_user(
     if reason == Reason.ticket and reason_value is not None:
         for delete_from_response in ["email", "password", "region", "possible_region"]:
             result_dict.pop(delete_from_response, None)
+
+    if result_dict.get("avatar", None):
+        avatar = (await db.execute(
+            select(File).where(File.id == result_dict["avatar"])
+        )).scalar_one_or_none()
+
+        if avatar is not None:
+            result_dict["avatar"] = model_to_dict(model=avatar)
+            if settings.s3_cdn_enabled == YesNo.YES:
+                result_dict["avatar"]["download_url"] = f"{settings.s3_cdn_url}/{create_cdn_token(
+                    path=f"/{avatar.external_id}",
+                    expires=now() + settings.s3_cdn_token_live,
+                    ip=""
+                )}/{avatar.external_id}"
 
     return CursedResponser(
         code = codes.SUCCESS,
@@ -759,4 +789,4 @@ async def delete_user(
             data={"deleted": "all", "total": total}
         )
 
-    return CursedStreamingResponser(delete_events())
+    return CursedNDJsonStreamingResponser(delete_events())

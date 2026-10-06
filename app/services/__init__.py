@@ -11,7 +11,8 @@ from .s3 import (
     multipart_upload_part,
     multipart_complete,
     multipart_abort,
-    multipart_stream
+    multipart_stream,
+    make_client
 )
 
 from .datacenters import (
@@ -46,6 +47,7 @@ __all__ = [
     "multipart_complete",
     "multipart_abort",
     "multipart_stream",
+    "make_client",
     "WGDashboardClient",
     "delete_subscription",
     "create_datacenters_clients",

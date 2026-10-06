@@ -81,10 +81,12 @@ class Settings(BaseSettings):
     s3_access: str = "abc"
     s3_secret: str = "abc"
     s3_region: str = "ru-1"
+    s3_multipart_min_part_size: int = 5
 
     s3_cdn_enabled: YesNo = YesNo.NO
     s3_cdn_url: str = "https://s3.private.com"
     s3_cdn_key: str = "abc123"
+    s3_cdn_token_live: int = 900
 
     # File, kb
     file_max_size: int = 10000

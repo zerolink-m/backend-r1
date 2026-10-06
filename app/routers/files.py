@@ -1,5 +1,6 @@
 # app/routers/files.py
 from app.utils import (
+    CursedStreamingResponser,
     require_authorization,
     CursedResponser,
     codes,
@@ -31,7 +32,8 @@ from app.models import (
 )
 from typing import Optional
 
-from app.services import multipart_stream
+from config import settings
+from app.services import multipart_stream, file_info, make_client
 from app.schemas import EditDatacenter, FilenamePattern, Reason
 import uuid
 
@@ -45,8 +47,6 @@ router = APIRouter(
 @router.get("/{file_id}")
 async def get_file(
     file_id: int,
-    reason: Reason | None = Query(default=None, max_length=64),
-    reason_value: int | None = Query(default=None, ge=1),
     db: AsyncSession = Depends(get_db),
     auth: dict = Depends(require_authorization(required_roles=["guest", "user", "support", "admin"]))
 ):
@@ -59,58 +59,13 @@ async def get_file(
             code=codes.NOT_FOUND,
             error=f"Resource {file_id} not found"
         )
-    '''
-    if reason == Reason.ticket and reason_value is not None:
-        ticket = (await db.execute(
-            select(Ticket).where(Ticket.id == reason_value)
-        )).scalar_one_or_none()
+    
+    check_resource_access(
+        requesting_user=auth["user"],
+        resource_owner_id=file.user_id,
+        operation=ResourceOperation.GET
+    )
 
-        # Если тикета нет
-        if ticket is None:
-            return CursedResponser(
-                code=codes.FORBIDDEN_RESOURCE,
-                data={},
-                error=f"Ticket {reason_value} is not exists."
-            )
-        
-        # Если саппорт то должно совпадать лол
-        if auth["user"].role == UserRole.SUPPORT:
-            if ticket.support_id != auth["user"].id:
-                return CursedResponser(
-                    code=codes.FORBIDDEN_RESOURCE,
-                    data={},
-                    error="Bad reason."
-                )
-            if ticket.user_id != authid:
-                return CursedResponser(
-                    code=codes.FORBIDDEN_RESOURCE,
-                    data={},
-                    error="Bad reason."
-                )
-
-        # Проверка остальных ролей
-        else:
-            if ticket.user_id != auth["user"].id:
-                return CursedResponser(
-                    code=codes.FORBIDDEN_RESOURCE,
-                    data={},
-                    error="Bad reason."
-                )
-
-            if ticket.support_id != user_id:
-                return CursedResponser(
-                    code=codes.FORBIDDEN_RESOURCE,
-                    data={},
-                    error="Bad reason."
-                )
-                      
-    else:
-        check_resource_access(
-            requesting_user=auth["user"],
-            resource_owner_id=user_id,
-            operation=ResourceOperation.GET
-        )
-    '''
     return CursedResponser(
         code = codes.SUCCESS,
         data = {
@@ -124,8 +79,58 @@ async def download_file(
     db: AsyncSession = Depends(get_db),
     auth: dict = Depends(require_authorization(required_roles=["guest", "user", "support", "admin"]))
 ):
-    
-    return
+    file = (await db.execute(
+        select(File).where(File.id == file_id)
+    )).scalar_one_or_none()
+
+    if not file:
+        return CursedResponser(
+            code=codes.OBJECT_NOT_FOUND,
+            data={},
+            error=f"Object File by File.id == {file_id} not found."
+        )
+
+    check_resource_access(
+        requesting_user=auth["user"],
+        resource_owner_id=file.user_id,
+        operation=ResourceOperation.GET
+    )
+
+    file_s3 = await file_info(key=file.external_id)
+
+    if file_s3 is None:
+        return CursedResponser(
+            code=codes.FILE_NOT_FOUND,
+            data={},
+            error=f"File not found or S3 error."
+        )
+
+    async def stream_file():
+        response = None
+        s3 = None
+
+        try:
+            s3 = await make_client().__aenter__()
+
+            response = await s3.get_object(Bucket=settings.s3_bucket, Key=file.external_id)
+            async for chunk in response["Body"]:
+                yield chunk
+
+        finally:
+            if response is not None:
+                await response["Body"].close()
+
+            if s3 is not None:
+                await s3.__aexit__(None, None, None)
+
+    return CursedStreamingResponser(
+        generator=stream_file(),
+        media_type=file_s3["content_type"],
+        headers={
+            "content-length": str(file.size),
+            "content-disposition": f'attachment; filename="{file.original_filename}"'
+        }
+    )
 
 @router.put("")
 async def upload_file(
@@ -160,6 +165,7 @@ async def upload_file(
         original_filename=original_filename,
         size=size,
         format=file_format,
+        media_type=request.header.get("media-type", "application/octet-stream"),
         added_by=auth["session"].id,
         updated_at=now(),
         added_at=now()

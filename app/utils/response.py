@@ -17,7 +17,7 @@ def CursedResponser(code: int, data: dict = {}, headers: dict | None = None, err
 def CursedJSON(code: int, data: dict, error: str | None = None):
     return {"code": code, "data": data, "detail": detail_map(code), "error": error}
 
-def CursedStreamingResponser(generator, code: int = STREAMING_RESPONSE, headers: dict | None = None):
+def CursedNDJsonStreamingResponser(generator, code: int = STREAMING_RESPONSE, headers: dict | None = None):
     """
     Потоковый ответ в формате NDJSON: одна строка JSON на каждое событие.
     generator — async-генератор, yield'ящий dict'ы событий.
@@ -46,6 +46,32 @@ def CursedStreamingResponser(generator, code: int = STREAMING_RESPONSE, headers:
         wrapped(),
         status_code=http_map(code),
         media_type="application/x-ndjson",
+        headers=base_headers
+    )
+
+def CursedStreamingResponser(generator, media_type: str = "application/octet-stream", code: int = STREAMING_RESPONSE, headers: dict | None = None):
+    """
+    Потоковый ответ в бинарном формате.
+    generator — async-генератор, yield'ящий события.
+    """
+    logging.debug(f"CursedStreamingResponser called with code={code}")
+
+    async def wrapped():
+        async for event in generator:
+            yield event
+
+    base_headers = {
+        "X-Code": str(code),
+        "Cache-Control": "no-cache",
+        #sse?
+    }
+    if headers:
+        base_headers.update(headers)
+
+    return StreamingResponse(
+        wrapped(),
+        status_code=http_map(code),
+        media_type=media_type,
         headers=base_headers
     )
 

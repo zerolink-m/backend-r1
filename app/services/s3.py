@@ -15,6 +15,8 @@ _session = aioboto3.Session(
     region_name=settings.s3_region,
 )
 
+MULTIPART_MIN_PART_SIZE = settings.s3_multipart_min_part_size * 1024 * 1024
+
 
 def make_client():
     """Новый S3-клиент. Стиль адресации из конфига (path = бакет в пути URL)."""
@@ -25,19 +27,16 @@ def make_client():
         config=Config(s3={"addressing_style": style}),
     )
 
-
 async def upload_file(key: str, data: bytes, content_type: str = "application/octet-stream") -> int:
     """1. Загрузка файла в бакет. Возвращает размер."""
     async with make_client() as s3:
         await s3.put_object(Bucket=settings.s3_bucket, Key=key, Body=data, ContentType=content_type)
     return len(data)
 
-
 async def delete_file(key: str) -> None:
     """2. Удаление файла. Если файла нет — просто ничего не делает."""
     async with make_client() as s3:
         await s3.delete_object(Bucket=settings.s3_bucket, Key=key)
-
 
 async def download_file(key: str) -> bytes:
     """Скачать файл целиком в память."""
@@ -45,7 +44,6 @@ async def download_file(key: str) -> bytes:
         resp = await s3.get_object(Bucket=settings.s3_bucket, Key=key)
         async with resp["Body"] as stream:
             return await stream.read()
-
 
 async def file_exists(key: str) -> bool:
     """Проверить наличие файла."""
@@ -55,7 +53,6 @@ async def file_exists(key: str) -> bool:
             return True
         except s3.exceptions.ClientError:
             return False
-
 
 async def file_info(key: str) -> dict | None:
     """Метаданные файла (размер, etag, content_type). None, если файла нет."""
@@ -68,9 +65,8 @@ async def file_info(key: str) -> dict | None:
         "size": head["ContentLength"],
         "etag": head["ETag"].strip('"'),
         "content_type": head["ContentType"],
-        "last_modified": int(head["LastModified"].timestamp()),
+        "last_modified": int(head["LastModified"].timestamp())
     }
-
 
 async def presigned_url(key: str, expires: int = 900, upload: bool = False) -> str:
     """Временная ссылка. upload=True -> для ЗАГРУЗКИ клиентом (PUT), иначе для скачивания."""
@@ -84,12 +80,6 @@ async def presigned_url(key: str, expires: int = 900, upload: bool = False) -> s
             ExpiresIn=expires,
         )
 
-
-# --- Multipart upload (стриминговая загрузка больших файлов) ---
-
-MULTIPART_MIN_PART_SIZE = 5 * 1024 * 1024  # S3: каждая часть (кроме последней) >= 5MB
-
-
 async def multipart_create(key: str, content_type: str = "application/octet-stream") -> str:
     """Начать multipart-загрузку. Возвращает upload_id."""
     async with make_client() as s3:
@@ -99,7 +89,6 @@ async def multipart_create(key: str, content_type: str = "application/octet-stre
             ContentType=content_type,
         )
     return resp["UploadId"]
-
 
 async def multipart_upload_part(key: str, upload_id: str, part_number: int, data: bytes) -> dict:
     """Загрузить одну часть (нумерация с 1). Возвращает {"PartNumber", "ETag"} для complete."""
@@ -113,7 +102,6 @@ async def multipart_upload_part(key: str, upload_id: str, part_number: int, data
         )
     return {"PartNumber": part_number, "ETag": resp["ETag"].strip('"')}
 
-
 async def multipart_complete(key: str, upload_id: str, parts: list[dict]) -> None:
     """Завершить загрузку. parts — список, возвращённый multipart_upload_part (по возрастанию PartNumber)."""
     async with make_client() as s3:
@@ -124,7 +112,6 @@ async def multipart_complete(key: str, upload_id: str, parts: list[dict]) -> Non
             MultipartUpload={"Parts": parts},
         )
 
-
 async def multipart_abort(key: str, upload_id: str) -> None:
     """Отменить загрузку (например, клиент оборвал соединение). S3 удалит уже загруженные части."""
     async with make_client() as s3:
@@ -133,7 +120,6 @@ async def multipart_abort(key: str, upload_id: str) -> None:
             Key=key,
             UploadId=upload_id,
         )
-
 
 async def multipart_stream(
     key: str,

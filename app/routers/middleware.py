@@ -37,6 +37,6 @@ class CursedMiddleware(BaseHTTPMiddleware):
 
         logging.debug(f"CursedMiddleware.dispatch: resolved real_ip={request.state.real_ip}")
 
-        response =  await call_next(request)
+        response = await call_next(request)
         # После
         return response

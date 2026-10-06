@@ -44,7 +44,13 @@ from .codes import (
 from .regions import REGIONS, Regions
 from .logger import setup_logging
 from .query_builder import apply_query_params
-from .response import CursedResponser, CursedException, CursedStreamingResponser, CursedJSON
+from .response import (
+    CursedResponser,
+    CursedException,
+    CursedNDJsonStreamingResponser,
+    CursedStreamingResponser,
+    CursedJSON
+)
 from .search import SearchMethod
 from .password import hash_password, verify_password
 from .fileformat import detect_format
@@ -103,6 +109,7 @@ __all__ = [
     "setup_logging",
     # Резпонз
     "CursedResponser",
+    "CursedNDJsonStreamingResponser",
     "CursedStreamingResponser",
     # Поиск
     "SearchMethod",

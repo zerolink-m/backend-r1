@@ -83,6 +83,12 @@ class File(Base):
         server_default="file"
     )
 
+    media_type: Mapped[str] = mapped_column(
+        String(48),
+        nullable=False,
+        server_default="application/octet-stream"
+    )
+
     added_by: Mapped[int] = mapped_column(
         BigInteger,
         nullable=False
